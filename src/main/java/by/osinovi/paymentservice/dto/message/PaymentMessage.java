@@ -1,21 +1,20 @@
-package by.osinovi.paymentservice.dto;
+package by.osinovi.paymentservice.dto.message;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class PaymentResponseDTO {
-    private String id;
+@AllArgsConstructor
+public class PaymentMessage {
+    private UUID paymentId;
     private Long orderId;
     private Long userId;
     private String status;
-    private LocalDateTime timestamp;
     private Double paymentAmount;
 }

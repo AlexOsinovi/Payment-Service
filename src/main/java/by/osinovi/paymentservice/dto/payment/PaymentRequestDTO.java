@@ -1,4 +1,4 @@
-package by.osinovi.paymentservice.dto;
+package by.osinovi.paymentservice.dto.payment;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,10 +15,10 @@ import lombok.Setter;
 public class PaymentRequestDTO {
 
     @NotBlank(message = "Order ID is required")
-    private String orderId;
+    private Long orderId;
 
     @NotBlank(message = "User ID is required")
-    private String userId;
+    private Long userId;
 
     @NotNull(message = "Payment amount is required")
     @Positive(message = "Payment amount must be positive")

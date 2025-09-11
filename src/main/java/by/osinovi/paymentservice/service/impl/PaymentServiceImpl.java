@@ -1,13 +1,16 @@
 package by.osinovi.paymentservice.service.impl;
 
-import by.osinovi.paymentservice.dto.PaymentRequestDTO;
-import by.osinovi.paymentservice.dto.PaymentResponseDTO;
+import by.osinovi.paymentservice.dto.payment.PaymentRequestDTO;
+import by.osinovi.paymentservice.dto.payment.PaymentResponseDTO;
 import by.osinovi.paymentservice.entity.Payment;
+import by.osinovi.paymentservice.kafka.PaymentProducer;
 import by.osinovi.paymentservice.mapper.PaymentMapper;
 import by.osinovi.paymentservice.repository.PaymentRepository;
 import by.osinovi.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,18 +18,29 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
-    private final RandomServiceImpl randomService;
+    private final ExternalAPIServiceImpl randomService;
+    private final PaymentProducer paymentProducer;
 
+    @Override
+    @Transactional
     public PaymentResponseDTO createPayment(PaymentRequestDTO dto) {
         Payment payment = paymentMapper.toEntity(dto);
         payment.setId(UUID.randomUUID());
         payment.setTimestamp(LocalDateTime.now());
-        payment.setStatus(randomService.getRandomStatus(payment));
+        payment.setStatus("CREATED");
         Payment saved = paymentRepository.save(payment);
+        paymentProducer.sendCreatePaymentEvent(paymentMapper.toMessage(saved));
+
+        String finalStatus = randomService.getStatus(payment);
+        saved.setStatus(finalStatus);
+        paymentRepository.save(saved);
+        paymentProducer.sendCreatePaymentEvent(paymentMapper.toMessage(saved));
+
         return paymentMapper.toResponseDto(saved);
     }
 

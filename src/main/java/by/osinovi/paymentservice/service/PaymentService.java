@@ -1,7 +1,7 @@
 package by.osinovi.paymentservice.service;
 
-import by.osinovi.paymentservice.dto.PaymentRequestDTO;
-import by.osinovi.paymentservice.dto.PaymentResponseDTO;
+import by.osinovi.paymentservice.dto.payment.PaymentRequestDTO;
+import by.osinovi.paymentservice.dto.payment.PaymentResponseDTO;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 package by.osinovi.paymentservice.controller;
 
-import by.osinovi.paymentservice.dto.PaymentRequestDTO;
-import by.osinovi.paymentservice.dto.PaymentResponseDTO;
+import by.osinovi.paymentservice.dto.payment.PaymentRequestDTO;
+import by.osinovi.paymentservice.dto.payment.PaymentResponseDTO;
 import by.osinovi.paymentservice.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
