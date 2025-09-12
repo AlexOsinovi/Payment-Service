@@ -1,6 +1,7 @@
 package by.osinovi.paymentservice.repository;
 
 import by.osinovi.paymentservice.entity.Payment;
+import by.osinovi.paymentservice.util.PaymentStatus;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -15,7 +16,7 @@ public interface PaymentRepository extends MongoRepository<Payment, Long> {
 
     List<Payment> findByOrderId(Long orderId);
 
-    List<Payment> findByStatusIn(List<String> statuses);
+    List<Payment> findByStatusIn(List<PaymentStatus> statuses);
 
     @Aggregation(pipeline = {
             "{ $match: { timestamp: { $gte: ?0, $lte: ?1 } } }",

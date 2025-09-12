@@ -1,5 +1,6 @@
 package by.osinovi.paymentservice.entity;
 
+import by.osinovi.paymentservice.util.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class Payment {
     @Field("user_id")
     private Long userId;
 
-    private String status;
+    private PaymentStatus status;
 
     private LocalDateTime timestamp;
 
