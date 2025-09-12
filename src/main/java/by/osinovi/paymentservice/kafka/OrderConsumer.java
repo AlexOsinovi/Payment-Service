@@ -14,11 +14,10 @@ public class OrderConsumer {
     private final PaymentService paymentService;
     private final PaymentProducer paymentProducer;
 
-    @KafkaListener(topics = "${spring.kafka.topics.orders}", groupId = "payment-group")
+    @KafkaListener(topics = "${spring.kafka.topics.orders}", groupId = "${spring.kafka.consumer.group-id}")
     @Transactional(transactionManager = "kafkaTransactionManager")
     public void handleCreateOrder(OrderMessage orderMessage) {
         Payment payment = paymentService.createPayment(orderMessage);
         paymentProducer.sendCreatePaymentEvent(payment);
     }
-    //TODO: HARD OR NOT
 }
