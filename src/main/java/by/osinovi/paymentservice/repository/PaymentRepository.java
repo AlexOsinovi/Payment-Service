@@ -27,5 +27,4 @@ public interface PaymentRepository extends MongoRepository<Payment, Long> {
 
     void deleteById(UUID id);
 
-    boolean existsByOrderId(Long orderId);
 }

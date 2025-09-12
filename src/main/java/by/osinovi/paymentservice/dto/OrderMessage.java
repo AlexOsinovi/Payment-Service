@@ -1,4 +1,4 @@
-package by.osinovi.paymentservice.dto.message;
+package by.osinovi.paymentservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
