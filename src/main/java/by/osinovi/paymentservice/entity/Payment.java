@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -32,5 +33,5 @@ public class Payment {
     private LocalDateTime timestamp;
 
     @Field("payment_amount")
-    private Double payment_amount;
+    private BigDecimal payment_amount;
 }
