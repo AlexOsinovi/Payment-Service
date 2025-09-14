@@ -12,6 +12,41 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
+          MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
+          MONGO_INITDB_DATABASE: paymentdb
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 30s
+      kafka:
+        image: bitnami/kafka:3.8
+        ports:
+          - 9092:9092
+          - 9093:9093
+        env:
+          KAFKA_CFG_NODE_ID: 1
+          KAFKA_CFG_PROCESS_ROLES: broker,controller
+          KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          ALLOW_PLAINTEXT_LISTENER: yes
+        options: >-
+          --health-cmd "nc -z localhost 9092"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 90s
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,13 +60,31 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Initialize MongoDB user
+        run: |
+          docker exec $(docker ps -q -f "ancestor=mongo:6") mongosh -u ${{ secrets.MONGO_INITDB_ROOT_USERNAME }} -p ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }} --authenticationDatabase admin paymentdb --eval "db.createUser({ user: '${{ secrets.MONGO_INITDB_ROOT_USERNAME }}', pwd: '${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}', roles: [ { role: 'readWrite', db: 'paymentdb' } ] })"
+
       - name: Build Application
         run: mvn clean install -DskipTests
 
       - name: Run Tests with JaCoCo Coverage
         run: mvn test verify jacoco:report
         env:
+          SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+          SPRING_DATA_MONGODB_HOST: mongodb
+          SPRING_DATA_MONGODB_PORT: 27017
+          SPRING_DATA_MONGODB_DATABASE: paymentdb
+          SPRING_DATA_MONGODB_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
+          SPRING_DATA_MONGODB_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
           RANDOM_API_URL: ${{ secrets.RANDOM_API_URL }}
+
+      - name: Debug MongoDB Logs
+        if: failure()
+        run: docker logs $(docker ps -a --filter "ancestor=mongo:6" --format "{{.ID}}") | tail -100
+
+      - name: Debug Kafka Logs
+        if: failure()
+        run: docker logs $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") | tail -100
 
       - name: SonarQube Code Analysis
         env:
