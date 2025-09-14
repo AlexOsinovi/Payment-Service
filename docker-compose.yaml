@@ -1,29 +1,56 @@
 services:
- kafka:
-  image: 'apache/kafka:4.0.0'
-  container_name: 'kafka'
-  ports:
-    - "9092:9092"
-  volumes:
-    - kafka_data:/var/lib/kafka/data
-  environment:
-    KAFKA_NODE_ID: 1
-    KAFKA_PROCESS_ROLES: "broker,controller"
-    KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"
-    KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
-    KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
-    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
-    KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
-    KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-    KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-    KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-  networks:
-    - backend_network
+  kafka:
+    image: 'apache/kafka:4.0.0'
+    container_name: 'kafka'
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - backend_network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-container-data:/data/db
+      - mongodb-container-config:/data/configdb
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - backend_network
+    restart: unless-stopped
+    entrypoint: ["docker-entrypoint.sh"]
+    command: ["mongod"]
+
 networks:
- backend_network:
-   driver: bridge
+  backend_network:
+    driver: bridge
 
 volumes:
   kafka_data:
+  mongodb-container-data:
+  mongodb-container-config:
