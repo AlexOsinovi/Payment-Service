@@ -2,7 +2,6 @@ package by.osinovi.paymentservice.integration;
 
 import by.osinovi.paymentservice.dto.OrderMessage;
 import by.osinovi.paymentservice.entity.Payment;
-import by.osinovi.paymentservice.kafka.PaymentProducer;
 import by.osinovi.paymentservice.repository.PaymentRepository;
 import by.osinovi.paymentservice.service.PaymentService;
 import by.osinovi.paymentservice.util.PaymentStatus;
