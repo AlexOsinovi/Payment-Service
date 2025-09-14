@@ -20,4 +20,5 @@ public class OrderConsumer {
         Payment payment = paymentService.createPayment(orderMessage);
         paymentProducer.sendCreatePaymentEvent(payment);
     }
+
 }

@@ -3,6 +3,7 @@ package by.osinovi.paymentservice.service.impl;
 import by.osinovi.paymentservice.dto.OrderMessage;
 import by.osinovi.paymentservice.entity.Payment;
 import by.osinovi.paymentservice.repository.PaymentRepository;
+import by.osinovi.paymentservice.service.ExternalAPIService;
 import by.osinovi.paymentservice.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,23 +19,24 @@ import java.util.UUID;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final ExternalAPIServiceImpl randomService;
+    private final ExternalAPIService externalAPIService;
 
     @Override
     @Transactional
     public Payment createPayment(OrderMessage orderMessage) {
+        if (orderMessage == null) {
+            throw new IllegalArgumentException("OrderMessage cannot be null");
+        }
         Payment payment = new Payment();
         payment.setId(UUID.randomUUID());
         payment.setOrderId(orderMessage.getOrderId());
         payment.setUserId(orderMessage.getUserId());
+        payment.setPayment_amount(orderMessage.getTotalAmount());
         payment.setTimestamp(LocalDateTime.now());
 
-        payment.setStatus(randomService.getStatus());
+        payment.setStatus(externalAPIService.getStatus());
 
-        Payment saved = paymentRepository.save(payment);
-        paymentRepository.save(saved);
-
-        return saved;
+        return paymentRepository.save(payment);
     }
 
     public Double getTotalAmountByDateRange(String start, String end) {

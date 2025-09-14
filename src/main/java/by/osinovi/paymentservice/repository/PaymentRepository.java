@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface PaymentRepository extends MongoRepository<Payment, Long> {
+public interface PaymentRepository extends MongoRepository<Payment, UUID> {
 
     List<Payment> findByUserId(Long userId);
 
@@ -20,7 +20,7 @@ public interface PaymentRepository extends MongoRepository<Payment, Long> {
 
     @Aggregation(pipeline = {
             "{ $match: { timestamp: { $gte: ?0, $lte: ?1 } } }",
-            "{ $group: { _id: null, total: { $sum: '$payment_amount' } } }"
+            "{ $group: { _id: null, total: { $sum: { $toDouble: '$payment_amount' } } } }"
     })
     Optional<Double> sumPaymentAmountByDateRange(LocalDateTime startDate, LocalDateTime endDate);
 
