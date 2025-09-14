@@ -38,15 +38,15 @@ jobs:
           KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
           KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
           KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
           KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
           ALLOW_PLAINTEXT_LISTENER: yes
         options: >-
-          --health-cmd "nc -z localhost 9092"
+          --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
           --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --health-start-period 90s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 120s
 
     steps:
       - name: Checkout code
@@ -79,13 +79,14 @@ jobs:
           SPRING_DATA_MONGODB_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
           RANDOM_API_URL: ${{ secrets.RANDOM_API_URL }}
 
-      - name: Debug MongoDB Logs
-        if: failure()
-        run: docker logs $(docker ps -a --filter "ancestor=mongo:6" --format "{{.ID}}") | tail -100
 
       - name: Debug Kafka Logs
         if: failure()
-        run: docker logs $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") | tail -100
+        run: |
+          docker logs $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") | tail -200
+          docker inspect $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}")
+          docker exec $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") nc -z localhost 9092 || echo "nc -z localhost 9092 failed"
+          docker exec $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") kafka-topics.sh --bootstrap-server localhost:9092 --list || echo "kafka-topics.sh --list failed"
 
       - name: SonarQube Code Analysis
         env:
