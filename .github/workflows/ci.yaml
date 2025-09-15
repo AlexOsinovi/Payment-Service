@@ -47,15 +47,7 @@ jobs:
           --health-timeout 10s
           --health-retries 10
           --health-start-period 120s
-      wiremock:
-        image: wiremock/wiremock:3.0.0
-        ports:
-          - 8089:8080
-        options: >-
-          --health-cmd "curl --fail http://localhost:8080/__admin || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    
 
     steps:
       - name: Checkout code
@@ -83,10 +75,10 @@ jobs:
           SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
           SPRING_DATA_MONGODB_HOST: mongodb
           SPRING_DATA_MONGODB_PORT: 27017
-          SPRING_DATA_MONGODB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}
-          SPRING_DATA_MONGODB_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
-          SPRING_DATA_MONGODB_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
-          RANDOM_API_URL: http://wiremock:8080
+          SPRING_DATA_MONGODB_DATABASE: payment_service_db
+          SPRING_DATA_MONGODB_USERNAME: admin
+          SPRING_DATA_MONGODB_PASSWORD: root
+          RANDOM_API_URL: https://www.random.org
 
 
       - name: Debug Kafka Logs
