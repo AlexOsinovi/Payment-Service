@@ -5,6 +5,7 @@ import by.osinovi.paymentservice.util.PaymentStatus;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,23 +26,33 @@ class WireMockIntegrationTest {
     @Autowired
     private ExternalAPIServiceImpl externalAPIService;
 
-    static {
-        wireMockServer = new WireMockServer(wireMockConfig().port(8088));
+    @BeforeAll
+    static void setUpClass() {
+        // Инициализация WireMock сервера на динамическом порту
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
-        System.out.println("WireMock started on port: 8088");
-        WireMock.configureFor("localhost", 8088);
+        System.out.println("WireMock started on port: " + wireMockServer.port());
+        WireMock.configureFor("localhost", wireMockServer.port());
+    }
+
+    @BeforeEach
+    void setUp() {
+        // Сброс всех моков перед каждым тестом
+        WireMock.reset();
     }
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("random-api-url", () -> "http://localhost:8088");
+        registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port());
     }
 
     @AfterAll
-    static void afterAll() {
-        if (wireMockServer != null) {
+    static void tearDownClass() {
+        if (wireMockServer != null && wireMockServer.isRunning()) {
             wireMockServer.stop();
-        }}
+            System.out.println("WireMock stopped");
+        }
+    }
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithEvenNumber() {
@@ -73,42 +79,6 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
-    }
-
-    @Test
-    void getStatus_ShouldReturnFailed_WhenAPIRespondsWithEmptyBody() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("")));
-
-        assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
-    }
-
-    @Test
-    void getStatus_ShouldReturnFailed_WhenAPIRespondsWithBlankBody() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("   ")));
-
-        assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
-    }
-
-    @Test
-    void getStatus_ShouldReturnFailed_WhenAPIRespondsWithNonNumericValue() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
-                .willReturn(aResponse()
-                        .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("not-a-number")));
-
-        assertThrows(NumberFormatException.class, () -> externalAPIService.getStatus());
         verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
     }
 

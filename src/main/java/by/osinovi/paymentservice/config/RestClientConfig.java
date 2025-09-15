@@ -13,6 +13,7 @@ public class RestClientConfig {
 
     @Bean
     public RestClient randomRestClient(RestClient.Builder restClientBuilder) {
+        System.out.println("RestClient baseUrl: " + randomApiUrl);
         return restClientBuilder.baseUrl(randomApiUrl).build();
     }
 }
