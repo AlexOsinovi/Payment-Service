@@ -20,7 +20,7 @@ jobs:
         env:
           MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
           MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
-          MONGO_INITDB_DATABASE: paymentdb
+          MONGO_INITDB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}
         options: >-
           --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
           --health-interval 10s
@@ -63,7 +63,7 @@ jobs:
 
       - name: Initialize MongoDB user
         run: |
-          docker exec $(docker ps -q -f "ancestor=mongo:6") mongosh -u ${{ secrets.MONGO_INITDB_ROOT_USERNAME }} -p ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }} --authenticationDatabase admin paymentdb --eval "db.createUser({ user: '${{ secrets.MONGO_INITDB_ROOT_USERNAME }}', pwd: '${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}', roles: [ { role: 'readWrite', db: 'paymentdb' } ] })"
+          docker exec $(docker ps -q -f "ancestor=mongo:6") mongosh -u ${{ secrets.MONGO_INITDB_ROOT_USERNAME }} -p ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }} --authenticationDatabase admin ${{ secrets.MONGO_INITDB_DATABASE }} --eval "db.createUser({ user: '${{ secrets.MONGO_INITDB_ROOT_USERNAME }}', pwd: '${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}', roles: [ { role: 'readWrite', db: 'paymentdb' } ] })"
 
       - name: Build Application
         run: mvn clean install -DskipTests
@@ -72,9 +72,9 @@ jobs:
         run: mvn test verify jacoco:report
         env:
           SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-          SPRING_DATA_MONGODB_HOST: mongodb
-          SPRING_DATA_MONGODB_PORT: 27017
-          SPRING_DATA_MONGODB_DATABASE: paymentdb
+          SPRING_DATA_MONGODB_HOST: ${{ secrets.MONGO_INITDB_HOST }}
+          SPRING_DATA_MONGODB_PORT: ${{ secrets.MONGO_INITDB_DATABASE }}
+          SPRING_DATA_MONGODB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}
           SPRING_DATA_MONGODB_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
           SPRING_DATA_MONGODB_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
           RANDOM_API_URL: ${{ secrets.RANDOM_API_URL }}
