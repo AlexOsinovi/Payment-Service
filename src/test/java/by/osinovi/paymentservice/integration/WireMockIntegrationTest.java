@@ -30,29 +30,23 @@ class WireMockIntegrationTest {
     @Autowired
     private ExternalAPIServiceImpl externalAPIService;
 
-    @DynamicPropertySource
-    static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port());
+    static {
+        wireMockServer = new WireMockServer(wireMockConfig().port(8088));
+        wireMockServer.start();
+        System.out.println("WireMock started on port: 8088");
+        WireMock.configureFor("localhost", 8088);
     }
 
-    static {
-        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
-        wireMockServer.start();
-        WireMock.configureFor("localhost", wireMockServer.port());
+    @DynamicPropertySource
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        registry.add("random-api-url", () -> "http://localhost:8088");
     }
 
     @AfterAll
     static void afterAll() {
         if (wireMockServer != null) {
             wireMockServer.stop();
-        }
-    }
-
-    @BeforeEach
-    void reset() {
-        WireMock.resetAllRequests();
-        WireMock.resetToDefault();
-    }
+        }}
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithEvenNumber() {
