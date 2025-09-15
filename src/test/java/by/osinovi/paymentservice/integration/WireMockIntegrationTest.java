@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.TestPropertySource;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -25,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         "random-api-url=http://localhost:8089"
 })
 class WireMockIntegrationTest {
+
+    @LocalServerPort
+    private Integer port;
 
     private WireMockServer wireMockServer;
 
