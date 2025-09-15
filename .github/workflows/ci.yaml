@@ -70,7 +70,7 @@ jobs:
         run: mvn clean install -DskipTests
 
       - name: Run Tests with JaCoCo Coverage
-        run: mvn test verify jacoco:report
+        run: mvn test verify jacoco:report -e -X
         env:
           SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
           SPRING_DATA_MONGODB_HOST: mongodb
