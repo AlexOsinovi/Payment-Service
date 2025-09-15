@@ -72,8 +72,8 @@ jobs:
         run: mvn test verify jacoco:report
         env:
           SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-          SPRING_DATA_MONGODB_HOST: ${{ secrets.MONGO_INITDB_HOST }}
-          SPRING_DATA_MONGODB_PORT: ${{ secrets.MONGO_INITDB_DATABASE }}
+          SPRING_DATA_MONGODB_HOST: mongodb
+          SPRING_DATA_MONGODB_PORT: 27017
           SPRING_DATA_MONGODB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}
           SPRING_DATA_MONGODB_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
           SPRING_DATA_MONGODB_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
