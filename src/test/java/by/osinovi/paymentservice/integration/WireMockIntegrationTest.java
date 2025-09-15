@@ -10,15 +10,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class WireMockIntegrationTest {
 
     private static WireMockServer wireMockServer;
@@ -28,7 +29,6 @@ class WireMockIntegrationTest {
 
     @BeforeAll
     static void setUpClass() {
-        // Инициализация WireMock сервера на динамическом порту
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
         System.out.println("WireMock started on port: " + wireMockServer.port());
@@ -37,7 +37,6 @@ class WireMockIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Сброс всех моков перед каждым тестом
         WireMock.reset();
     }
 
@@ -56,113 +55,113 @@ class WireMockIntegrationTest {
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithEvenNumber() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("42")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[42]")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWithOddNumber() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("43")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[43]")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWith500Error() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(500)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Internal Server Error")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"error\": \"Internal Server Error\"}")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWith404Error() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(404)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("Not Found")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"error\": \"Not Found\"}")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldHandleResponseWithWhitespace_WhenValidNumber() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("  50  ")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("  [50]  ")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithMinimumValue() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("2")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[2]")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWithMaximumValue() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("99")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[99]")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithMaximumEvenValue() {
-        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+        stubFor(get(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1"))
                 .willReturn(aResponse()
                         .withStatus(200)
-                        .withHeader("Content-Type", "text/plain")
-                        .withBody("100")));
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[100]")));
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")));
+        verify(getRequestedFor(urlEqualTo("/api/v1.0/random?min=1&max=100&count=1")));
     }
 }
