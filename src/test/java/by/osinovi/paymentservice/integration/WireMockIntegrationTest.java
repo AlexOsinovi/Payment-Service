@@ -27,9 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 })
 class WireMockIntegrationTest {
 
-    @LocalServerPort
-    private Integer port;
-
     private WireMockServer wireMockServer;
 
     @Autowired
