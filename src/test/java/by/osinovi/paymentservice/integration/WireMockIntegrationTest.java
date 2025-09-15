@@ -5,7 +5,6 @@ import by.osinovi.paymentservice.util.PaymentStatus;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +35,7 @@ class WireMockIntegrationTest {
         registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port());
     }
 
-    @BeforeAll
-    static void beforeAll() {
+    static {
         wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
