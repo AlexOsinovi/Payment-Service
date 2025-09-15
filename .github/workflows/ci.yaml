@@ -77,7 +77,7 @@ jobs:
           SPRING_DATA_MONGODB_DATABASE: ${{ secrets.MONGO_INITDB_DATABASE }}
           SPRING_DATA_MONGODB_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
           SPRING_DATA_MONGODB_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
-          RANDOM_API_URL: ${{ secrets.RANDOM_API_URL }}
+          RANDOM_API_URL: http://localhost:8089
 
 
       - name: Debug Kafka Logs

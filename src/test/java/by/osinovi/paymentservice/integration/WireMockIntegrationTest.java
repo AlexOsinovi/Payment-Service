@@ -22,12 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-    "random-api-url=http://localhost:8089"
+        "random-api-url=http://localhost:8089"
 })
 class WireMockIntegrationTest {
 
     private WireMockServer wireMockServer;
-    
+
     @Autowired
     private ExternalAPIServiceImpl externalAPIService;
 
