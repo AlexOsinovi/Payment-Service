@@ -4,13 +4,14 @@ import by.osinovi.paymentservice.service.impl.ExternalAPIServiceImpl;
 import by.osinovi.paymentservice.util.PaymentStatus;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -18,30 +19,41 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-        "random-api-url=http://localhost:8089"
-})
 class WireMockIntegrationTest {
 
-    private WireMockServer wireMockServer;
+    private static WireMockServer wireMockServer;
 
     @Autowired
     private ExternalAPIServiceImpl externalAPIService;
 
-    @BeforeEach
-    void setUp() {
-        wireMockServer = new WireMockServer(8089);
-        wireMockServer.start();
-        WireMock.configureFor("localhost", 8089);
+    @DynamicPropertySource
+    static void registerProperties(DynamicPropertyRegistry registry) {
+        registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port());
     }
 
-    @AfterEach
-    void tearDown() {
-        wireMockServer.stop();
+    @BeforeAll
+    static void beforeAll() {
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
+    }
+
+    @AfterAll
+    static void afterAll() {
+        if (wireMockServer != null) {
+            wireMockServer.stop();
+        }
+    }
+
+    @BeforeEach
+    void reset() {
+        WireMock.resetAllRequests();
+        WireMock.resetToDefault();
     }
 
     @Test
