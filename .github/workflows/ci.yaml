@@ -78,7 +78,7 @@ jobs:
           SPRING_DATA_MONGODB_DATABASE: payment_service_db
           SPRING_DATA_MONGODB_USERNAME: admin
           SPRING_DATA_MONGODB_PASSWORD: root
-          RANDOM_API_URL: https://aisenseapi.com/services/v1/random_number/1/100
+          RANDOM_API_URL: https://www.random.org
 
 
       - name: Debug Kafka Logs

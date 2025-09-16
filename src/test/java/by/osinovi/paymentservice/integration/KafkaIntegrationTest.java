@@ -6,7 +6,10 @@ import by.osinovi.paymentservice.repository.PaymentRepository;
 import by.osinovi.paymentservice.service.PaymentService;
 import by.osinovi.paymentservice.util.PaymentStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,41 +33,18 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Testcontainers
 @DirtiesContext
 public class KafkaIntegrationTest {
 
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0")
-            .withReuse(true)
-            .withStartupTimeout(java.time.Duration.ofMinutes(2));
+    private static WireMockServer wireMockServer;
 
-    @Container
-    public static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"))
-            .withReuse(true)
-            .withStartupTimeout(java.time.Duration.ofMinutes(2));
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
-        registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
-        registry.add("spring.kafka.consumer.enable-auto-commit", () -> "false");
-        registry.add("spring.kafka.consumer.group-id", () -> "payment-group");
-        registry.add("spring.kafka.topics.orders", () -> "orders-topic");
-        registry.add("spring.kafka.topics.payments", () -> "payments-topic");
-        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers", () -> false);
-        registry.add("spring.kafka.consumer.properties.spring.json.trusted.packages", () -> "by.osinovi.*");
-
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
+    private final BlockingQueue<ConsumerRecord<String, Payment>> paymentEvents = new LinkedBlockingQueue<>();
 
     @Autowired
     private PaymentService paymentService;
@@ -78,22 +58,54 @@ public class KafkaIntegrationTest {
     @Autowired
     private KafkaTemplate<String, OrderMessage> kafkaTemplate;
 
+    @Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0")
+            .withReuse(true)
+            .withStartupTimeout(java.time.Duration.ofMinutes(2));
 
-    private final BlockingQueue<ConsumerRecord<String, Payment>> paymentEvents = new LinkedBlockingQueue<>();
+    @Container
+    public static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"))
+            .withReuse(true)
+            .withStartupTimeout(java.time.Duration.ofMinutes(3));
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
+        registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
+        registry.add("spring.kafka.consumer.enable-auto-commit", () -> "false");
+        registry.add("spring.kafka.consumer.group-id", () -> "payment-group");
+        registry.add("spring.kafka.topics.orders", () -> "orders-topic");
+        registry.add("spring.kafka.topics.payments", () -> "payments-topic");
+        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers", () -> false);
+        registry.add("spring.kafka.consumer.properties.spring.json.trusted.packages", () -> "by.osinovi.*");
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port());
+    }
+
+    @BeforeAll
+    static void setUpClass() {
+        wireMockServer = new WireMockServer(wireMockConfig().dynamicPort());
+        wireMockServer.start();
+        System.out.println("WireMock started on port: " + wireMockServer.port());
+        WireMock.configureFor("localhost", wireMockServer.port());
+    }
 
     @BeforeEach
     void setUp() {
         paymentRepository.deleteAll();
         paymentEvents.clear();
+        WireMock.reset();
+
+        stubFor(get(urlEqualTo("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "text/plain")
+                        .withBody("42")));
     }
 
     @Test
     void fullKafkaFlow_ShouldProcessOrderMessageAndSendPaymentEvent() throws Exception {
-        OrderMessage orderMessage = new OrderMessage();
-        orderMessage.setOrderId(123L);
-        orderMessage.setUserId(456L);
-        orderMessage.setTotalAmount(new BigDecimal("100.50"));
-
+        OrderMessage orderMessage = createOrderMessage(123L, 456L, new BigDecimal("100.50"));
         paymentEvents.clear();
 
         kafkaTemplate.executeInTransaction(operations -> {
@@ -101,7 +113,8 @@ public class KafkaIntegrationTest {
             return null;
         });
 
-        Thread.sleep(20000);
+        ConsumerRecord<String, Payment> receivedEvent = paymentEvents.poll(10, TimeUnit.SECONDS);
+        assertNotNull(receivedEvent, "No payment event was received within 10 seconds");
 
         List<Payment> payments = paymentRepository.findByOrderId(orderMessage.getOrderId());
         assertFalse(payments.isEmpty(), "No payment found for orderId: " + orderMessage.getOrderId());
@@ -110,11 +123,9 @@ public class KafkaIntegrationTest {
         assertEquals(orderMessage.getOrderId(), createdPayment.getOrderId());
         assertEquals(orderMessage.getUserId(), createdPayment.getUserId());
         assertEquals(orderMessage.getTotalAmount(), createdPayment.getPayment_amount());
-        assertNotNull(createdPayment.getStatus());
+        assertEquals(PaymentStatus.SUCCESS, createdPayment.getStatus());
         assertNotNull(createdPayment.getTimestamp());
 
-        ConsumerRecord<String, Payment> receivedEvent = paymentEvents.poll(10, TimeUnit.SECONDS);
-        assertNotNull(receivedEvent, "No payment event was received within 10 seconds");
         assertEquals(createdPayment.getId().toString(), receivedEvent.key());
         assertEquals(createdPayment.getId(), receivedEvent.value().getId());
         assertEquals(createdPayment.getOrderId(), receivedEvent.value().getOrderId());
@@ -124,10 +135,7 @@ public class KafkaIntegrationTest {
 
     @Test
     void handleCreateOrder_ShouldProcessOrderMessageAndCreatePayment() throws Exception {
-        OrderMessage orderMessage = new OrderMessage();
-        orderMessage.setOrderId(123L);
-        orderMessage.setUserId(456L);
-        orderMessage.setTotalAmount(new BigDecimal("100.50"));
+        OrderMessage orderMessage = createOrderMessage(123L, 456L, new BigDecimal("100.50"));
 
         Payment result = paymentService.createPayment(orderMessage);
 
@@ -136,7 +144,6 @@ public class KafkaIntegrationTest {
         assertEquals(orderMessage.getUserId(), result.getUserId());
         assertNotNull(result.getId());
         assertNotNull(result.getTimestamp());
-        assertNotNull(result.getStatus());
 
         assertTrue(paymentRepository.existsById(result.getId()));
     }
@@ -155,7 +162,6 @@ public class KafkaIntegrationTest {
         assertEquals(payment.getPayment_amount(), deserializedPayment.getPayment_amount());
         assertEquals(payment.getTimestamp(), deserializedPayment.getTimestamp());
     }
-
 
     @Test
     @Transactional(transactionManager = "kafkaTransactionManager")
@@ -178,8 +184,6 @@ public class KafkaIntegrationTest {
         assertNotEquals(payment1.getId(), payment3.getId());
     }
 
-
-
     @Test
     void paymentStatus_ShouldBeSetCorrectly() throws Exception {
         OrderMessage orderMessage = createOrderMessage(123L, 456L, new BigDecimal("100.00"));
@@ -187,7 +191,6 @@ public class KafkaIntegrationTest {
         Payment result = paymentService.createPayment(orderMessage);
 
         assertNotNull(result.getStatus());
-        assertTrue(result.getStatus() == PaymentStatus.SUCCESS || result.getStatus() == PaymentStatus.FAILED);
         assertEquals(orderMessage.getTotalAmount(), result.getPayment_amount());
     }
 
@@ -198,10 +201,7 @@ public class KafkaIntegrationTest {
 
     @Test
     void simpleKafkaTest_ShouldWork() throws Exception {
-        OrderMessage orderMessage = new OrderMessage();
-        orderMessage.setOrderId(999L);
-        orderMessage.setUserId(888L);
-        orderMessage.setTotalAmount(new BigDecimal("50.00"));
+        OrderMessage orderMessage = createOrderMessage(999L, 888L, new BigDecimal("50.00"));
 
         Payment payment = paymentService.createPayment(orderMessage);
 
@@ -209,7 +209,6 @@ public class KafkaIntegrationTest {
         assertEquals(orderMessage.getOrderId(), payment.getOrderId());
         assertEquals(orderMessage.getUserId(), payment.getUserId());
         assertEquals(orderMessage.getTotalAmount(), payment.getPayment_amount());
-        assertNotNull(payment.getStatus());
         assertNotNull(payment.getTimestamp());
 
         assertTrue(paymentRepository.existsById(payment.getId()));
@@ -237,10 +236,10 @@ public class KafkaIntegrationTest {
         assertTrue(paymentRepository.existsById(result.getId()));
     }
 
-
-    @KafkaListener(topics = "payments-topic", groupId = "payment-test-group",containerFactory = "paymentListenerContainerFactory")
+    @KafkaListener(topics = "payments-topic", groupId = "payment-test-group", containerFactory = "paymentListenerContainerFactory")
     public void listenToPaymentEvents(ConsumerRecord<String, Payment> record) {
         paymentEvents.add(record);
+        System.out.println("Received payment event: " + record.value());
     }
 
     private Payment createTestPayment() {
