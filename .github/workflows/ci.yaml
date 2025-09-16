@@ -25,10 +25,6 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Initialize MongoDB user
-        run: |
-          docker exec $(docker ps -q -f "ancestor=mongo:6") mongosh -u ${{ secrets.MONGO_INITDB_ROOT_USERNAME }} -p ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }} --authenticationDatabase admin ${{ secrets.MONGO_INITDB_DATABASE }} --eval "db.createUser({ user: '${{ secrets.MONGO_INITDB_ROOT_USERNAME }}', pwd: '${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}', roles: [ { role: 'readWrite', db: '${{ secrets.MONGO_INITDB_DATABASE }}' } ] })"
-
       - name: Build Application
         run: mvn clean install -DskipTests
 
