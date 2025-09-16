@@ -13,7 +13,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,7 +45,7 @@ class WireMockIntegrationTest {
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port() + "/services/v1/random_number1/100");
+        registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port() + "/services/v1/random_number/1/100");
     }
 
     @AfterAll
@@ -53,7 +58,7 @@ class WireMockIntegrationTest {
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithEvenNumber() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -62,12 +67,12 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWithOddNumber() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -76,7 +81,7 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
@@ -90,12 +95,12 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWith404Error() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(404)
                         .withHeader("Content-Type", "application/json")
@@ -104,12 +109,12 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
     void getStatus_ShouldHandleResponseWithWhitespace_WhenValidNumber() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -118,12 +123,12 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithMinimumValue() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -132,12 +137,12 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
     void getStatus_ShouldReturnFailed_WhenAPIRespondsWithMaximumValue() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -146,12 +151,12 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenAPIRespondsWithMaximumEvenValue() {
-        stubFor(get(urlEqualTo("/services/v1/random_number1/100"))
+        stubFor(get(urlEqualTo("/services/v1/random_number/1/100"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -160,6 +165,6 @@ class WireMockIntegrationTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
-        verify(getRequestedFor(urlEqualTo("/services/v1/random_number1/100")));
+        verify(getRequestedFor(urlEqualTo("/services/v1/random_number/1/100")));
     }
 }
