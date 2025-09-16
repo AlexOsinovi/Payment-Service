@@ -31,15 +31,6 @@ jobs:
       - name: Run Tests with JaCoCo Coverage
         run: mvn test verify jacoco:report -e -X
 
-
-      - name: Debug Kafka Logs
-        if: failure()
-        run: |
-          docker logs $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") | tail -200
-          docker inspect $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}")
-          docker exec $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") nc -z localhost 9092 || echo "nc -z localhost 9092 failed"
-          docker exec $(docker ps -a --filter "ancestor=bitnami/kafka:3.8" --format "{{.ID}}") kafka-topics.sh --bootstrap-server localhost:9092 --list || echo "kafka-topics.sh --list failed"
-
       - name: SonarQube Code Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
