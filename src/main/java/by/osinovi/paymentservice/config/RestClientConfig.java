@@ -8,8 +8,12 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfig {
 
+    @Value("${random-api-url}")
+    private String uri;
+
     @Bean
     public RestClient restClient(RestClient.Builder restClientBuilder) {
-        return restClientBuilder.build();
+        return restClientBuilder.baseUrl(uri).build();
     }
+
 }

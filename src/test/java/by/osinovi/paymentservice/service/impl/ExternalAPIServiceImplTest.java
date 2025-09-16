@@ -38,7 +38,7 @@ class ExternalAPIServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(externalAPIService, "uri", "/services/v1/random_number/1/100");
+        ReflectionTestUtils.setField(externalAPIService, "uri", "/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         when(restClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(any(String.class))).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
@@ -52,7 +52,7 @@ class ExternalAPIServiceImplTest {
 
         assertEquals(PaymentStatus.SUCCESS, result);
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -65,7 +65,7 @@ class ExternalAPIServiceImplTest {
 
         assertEquals(PaymentStatus.FAILED, result);
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -76,7 +76,7 @@ class ExternalAPIServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -87,7 +87,7 @@ class ExternalAPIServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -98,7 +98,7 @@ class ExternalAPIServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -109,7 +109,7 @@ class ExternalAPIServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -122,7 +122,7 @@ class ExternalAPIServiceImplTest {
 
         assertEquals(PaymentStatus.FAILED, result);
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -135,7 +135,7 @@ class ExternalAPIServiceImplTest {
 
         assertEquals(PaymentStatus.SUCCESS, result);
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -148,7 +148,7 @@ class ExternalAPIServiceImplTest {
 
         assertEquals(PaymentStatus.FAILED, result);
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
@@ -161,7 +161,7 @@ class ExternalAPIServiceImplTest {
 
         assertEquals(PaymentStatus.SUCCESS, result);
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("/services/v1/random_number/1/100");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
