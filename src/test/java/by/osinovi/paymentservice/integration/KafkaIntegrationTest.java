@@ -8,8 +8,6 @@ import by.osinovi.paymentservice.util.PaymentStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,9 +33,17 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Testcontainers
@@ -73,14 +79,13 @@ public class KafkaIntegrationTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
-        registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
-        registry.add("spring.kafka.consumer.enable-auto-commit", () -> "false");
-        registry.add("spring.kafka.consumer.group-id", () -> "payment-group");
-        registry.add("spring.kafka.topics.orders", () -> "orders-topic");
-        registry.add("spring.kafka.topics.payments", () -> "payments-topic");
-        registry.add("spring.kafka.producer.properties.spring.json.add.type.headers", () -> false);
-        registry.add("spring.kafka.consumer.properties.spring.json.trusted.packages", () -> "by.osinovi.*");
+
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("spring.data.mongodb.database", () -> "payment_service_test");
+        registry.add("spring.data.mongodb.host", () -> "localhost");
+        registry.add("spring.data.mongodb.username", () -> "testuser");
+        registry.add("spring.data.mongodb.password", () -> "testpass");
+
         registry.add("random-api-url", () -> "http://localhost:" + wireMockServer.port());
     }
 

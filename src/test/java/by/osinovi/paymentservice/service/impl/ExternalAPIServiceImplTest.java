@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -38,7 +37,6 @@ class ExternalAPIServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(externalAPIService, "uri", "/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         when(restClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(any(String.class))).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
@@ -46,7 +44,7 @@ class ExternalAPIServiceImplTest {
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenRandomNumberIsEven() {
-        when(responseSpec.body(String.class)).thenReturn("[42]");
+        when(responseSpec.body(String.class)).thenReturn("42");
 
         PaymentStatus result = externalAPIService.getStatus();
 
@@ -59,7 +57,7 @@ class ExternalAPIServiceImplTest {
 
     @Test
     void getStatus_ShouldReturnFailed_WhenRandomNumberIsOdd() {
-        when(responseSpec.body(String.class)).thenReturn("[43]");
+        when(responseSpec.body(String.class)).thenReturn("43");
 
         PaymentStatus result = externalAPIService.getStatus();
 
@@ -98,14 +96,14 @@ class ExternalAPIServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
-        verify(requestHeadersUriSpec, times(1)).uri("integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
         verify(responseSpec, times(1)).body(String.class);
     }
 
     @Test
-    void getStatus_ShouldThrowRuntimeException_WhenResponseContainsInvalidJson() {
-        when(responseSpec.body(String.class)).thenReturn("not-a-json");
+    void getStatus_ShouldThrowRuntimeException_WhenResponseIsInvalidNumber() {
+        when(responseSpec.body(String.class)).thenReturn("not-a-number");
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
@@ -115,12 +113,10 @@ class ExternalAPIServiceImplTest {
     }
 
     @Test
-    void getStatus_ShouldReturnFailed_WhenRestClientThrowsException() {
+    void getStatus_ShouldThrowRuntimeException_WhenRestClientThrowsException() {
         when(responseSpec.body(String.class)).thenThrow(new RestClientException("Connection failed"));
 
-        PaymentStatus result = externalAPIService.getStatus();
-
-        assertEquals(PaymentStatus.FAILED, result);
+        assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
         verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
@@ -129,7 +125,7 @@ class ExternalAPIServiceImplTest {
 
     @Test
     void getStatus_ShouldHandleResponseWithWhitespace_WhenValidNumber() {
-        when(responseSpec.body(String.class)).thenReturn("  [50]  ");
+        when(responseSpec.body(String.class)).thenReturn("  50  ");
 
         PaymentStatus result = externalAPIService.getStatus();
 
@@ -142,7 +138,7 @@ class ExternalAPIServiceImplTest {
 
     @Test
     void getStatus_ShouldReturnFailed_WhenRandomNumberIsOne() {
-        when(responseSpec.body(String.class)).thenReturn("[1]");
+        when(responseSpec.body(String.class)).thenReturn("1");
 
         PaymentStatus result = externalAPIService.getStatus();
 
@@ -155,11 +151,22 @@ class ExternalAPIServiceImplTest {
 
     @Test
     void getStatus_ShouldReturnSuccess_WhenRandomNumberIsHundred() {
-        when(responseSpec.body(String.class)).thenReturn("[100]");
+        when(responseSpec.body(String.class)).thenReturn("100");
 
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
+        verify(restClient, times(1)).get();
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
+        verify(requestHeadersSpec, times(1)).retrieve();
+        verify(responseSpec, times(1)).body(String.class);
+    }
+
+    @Test
+    void getStatus_ShouldThrowIllegalArgumentException_WhenRandomNumberIsNegative() {
+        when(responseSpec.body(String.class)).thenReturn("-1");
+
+        assertThrows(IllegalArgumentException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
         verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
