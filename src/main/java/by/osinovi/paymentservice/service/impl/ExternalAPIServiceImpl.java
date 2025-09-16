@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -17,13 +18,16 @@ import java.util.List;
 @Slf4j
 public class ExternalAPIServiceImpl implements ExternalAPIService {
 
+    @Value("${random-api-url}")
+    private String uri;
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PaymentStatus getStatus() {
         try {
             String body = restClient.get()
-                    .uri("/api/v1.0/random?min=1&max=100&count=1")
+                    .uri(uri)
                     .retrieve()
                     .body(String.class);
 
