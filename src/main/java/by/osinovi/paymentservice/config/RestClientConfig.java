@@ -15,5 +15,4 @@ public class RestClientConfig {
     public RestClient restClient(RestClient.Builder restClientBuilder) {
         return restClientBuilder.baseUrl(uri).build();
     }
-
 }

@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentRepository extends MongoRepository<Payment, UUID> {
-
     List<Payment> findByUserId(Long userId);
 
     List<Payment> findByOrderId(Long orderId);
@@ -27,5 +26,4 @@ public interface PaymentRepository extends MongoRepository<Payment, UUID> {
     boolean existsById(UUID id);
 
     void deleteById(UUID id);
-
 }

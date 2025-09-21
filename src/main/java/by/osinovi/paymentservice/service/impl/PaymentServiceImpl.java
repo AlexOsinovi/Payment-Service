@@ -43,5 +43,4 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.sumPaymentAmountByDateRange(LocalDateTime.parse(start), LocalDateTime.parse(end))
                 .orElse(0.0);
     }
-
 }
