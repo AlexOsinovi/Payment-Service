@@ -16,13 +16,11 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 
+import static by.osinovi.paymentservice.integration.KafkaIntegrationTest.kafkaContainer;
+
 @Configuration
 public class TestKafkaConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(TestKafkaConfig.class);
-
-    @Value("${spring.kafka.bootstrap-servers}")
-    private String bootstrapServers;
 
     @Bean(name = "paymentListenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, Payment> paymentListenerContainerFactory(
@@ -35,9 +33,8 @@ public class TestKafkaConfig {
 
     @Bean
     public ConsumerFactory<String, Payment> paymentConsumerFactory() {
-        log.info("Configuring Kafka ConsumerFactory with bootstrap servers: {}", bootstrapServers);
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "payment-group");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);

@@ -9,10 +9,11 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
 
     @Value("${random-api-url}")
-    private String randomApiUrl;
+    private String uri;
 
     @Bean
-    public RestClient randomRestClient(RestClient.Builder restClientBuilder) {
-        return restClientBuilder.baseUrl(randomApiUrl).build();
+    public RestClient restClient(RestClient.Builder restClientBuilder) {
+        return restClientBuilder.baseUrl(uri).build();
     }
+
 }

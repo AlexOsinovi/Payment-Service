@@ -69,7 +69,7 @@ class ExternalAPIServiceImplTest {
     }
 
     @Test
-    void getStatus_ShouldReturnFailed_WhenResponseIsNull() {
+    void getStatus_ShouldThrowRuntimeException_WhenResponseIsNull() {
         when(responseSpec.body(String.class)).thenReturn(null);
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
@@ -80,7 +80,7 @@ class ExternalAPIServiceImplTest {
     }
 
     @Test
-    void getStatus_ShouldReturnFailed_WhenResponseIsBlank() {
+    void getStatus_ShouldThrowRuntimeException_WhenResponseIsBlank() {
         when(responseSpec.body(String.class)).thenReturn("   ");
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
@@ -91,7 +91,7 @@ class ExternalAPIServiceImplTest {
     }
 
     @Test
-    void getStatus_ShouldReturnFailed_WhenResponseIsEmpty() {
+    void getStatus_ShouldThrowRuntimeException_WhenResponseIsEmpty() {
         when(responseSpec.body(String.class)).thenReturn("");
 
         assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
@@ -102,10 +102,10 @@ class ExternalAPIServiceImplTest {
     }
 
     @Test
-    void getStatus_ShouldReturnFailed_WhenResponseContainsNonNumericValue() {
+    void getStatus_ShouldThrowRuntimeException_WhenResponseIsInvalidNumber() {
         when(responseSpec.body(String.class)).thenReturn("not-a-number");
 
-        assertThrows(NumberFormatException.class, () -> externalAPIService.getStatus());
+        assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
         verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
@@ -113,12 +113,10 @@ class ExternalAPIServiceImplTest {
     }
 
     @Test
-    void getStatus_ShouldReturnFailed_WhenRestClientThrowsException() {
+    void getStatus_ShouldThrowRuntimeException_WhenRestClientThrowsException() {
         when(responseSpec.body(String.class)).thenThrow(new RestClientException("Connection failed"));
 
-        PaymentStatus result = externalAPIService.getStatus();
-
-        assertEquals(PaymentStatus.FAILED, result);
+        assertThrows(RuntimeException.class, () -> externalAPIService.getStatus());
         verify(restClient, times(1)).get();
         verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
         verify(requestHeadersSpec, times(1)).retrieve();
@@ -145,6 +143,10 @@ class ExternalAPIServiceImplTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.FAILED, result);
+        verify(restClient, times(1)).get();
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
+        verify(requestHeadersSpec, times(1)).retrieve();
+        verify(responseSpec, times(1)).body(String.class);
     }
 
     @Test
@@ -154,5 +156,20 @@ class ExternalAPIServiceImplTest {
         PaymentStatus result = externalAPIService.getStatus();
 
         assertEquals(PaymentStatus.SUCCESS, result);
+        verify(restClient, times(1)).get();
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
+        verify(requestHeadersSpec, times(1)).retrieve();
+        verify(responseSpec, times(1)).body(String.class);
+    }
+
+    @Test
+    void getStatus_ShouldThrowIllegalArgumentException_WhenRandomNumberIsNegative() {
+        when(responseSpec.body(String.class)).thenReturn("-1");
+
+        assertThrows(IllegalArgumentException.class, () -> externalAPIService.getStatus());
+        verify(restClient, times(1)).get();
+        verify(requestHeadersUriSpec, times(1)).uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new");
+        verify(requestHeadersSpec, times(1)).retrieve();
+        verify(responseSpec, times(1)).body(String.class);
     }
 }

@@ -15,6 +15,7 @@ public class ExternalAPIServiceImpl implements ExternalAPIService {
 
     private final RestClient restClient;
 
+    @Override
     public PaymentStatus getStatus() {
         try {
             String body = restClient.get()
@@ -23,15 +24,25 @@ public class ExternalAPIServiceImpl implements ExternalAPIService {
                     .body(String.class);
 
             if (body != null && !body.isBlank()) {
-                int randomNumber = Integer.parseInt(body.trim());
-                log.info("Received random number: {}", randomNumber);
-                return randomNumber % 2 == 0 ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+                try {
+                    int randomNumber = Integer.parseInt(body.trim());
+                    log.info("Received random number: {}", randomNumber);
+                    if (randomNumber < 0) {
+                        log.error("Invalid random number: {}", randomNumber);
+                        throw new IllegalArgumentException("Random number cannot be negative");
+                    }
+                    return randomNumber % 2 == 0 ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
+                } catch (NumberFormatException e) {
+                    log.error("Failed to parse response as integer: {}", body, e);
+                    throw new RuntimeException("Invalid integer response from API", e);
+                }
             } else {
+                log.error("Empty or invalid response from API");
                 throw new RuntimeException("Empty or invalid response from API");
             }
         } catch (RestClientException e) {
             log.error("Error calling random API: {}", e.getMessage(), e);
-            return PaymentStatus.FAILED;
+            throw new RuntimeException("Failed to call random API", e);
         }
     }
 }

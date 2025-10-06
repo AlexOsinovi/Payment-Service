@@ -35,6 +35,10 @@ class MongoDBIntegrationTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+        registry.add("spring.data.mongodb.database", () -> "payment_service_test");
+        registry.add("spring.data.mongodb.host", () -> "localhost");
+        registry.add("spring.data.mongodb.username", () -> "testuser");
+        registry.add("spring.data.mongodb.password", () -> "testpass");
     }
 
     @Autowired
