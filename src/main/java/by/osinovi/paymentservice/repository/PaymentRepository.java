@@ -6,6 +6,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface PaymentRepository extends MongoRepository<Payment, Long> {
 
@@ -19,6 +21,9 @@ public interface PaymentRepository extends MongoRepository<Payment, Long> {
             "{ $match: { timestamp: { $gte: ?0, $lte: ?1 } } }",
             "{ $group: { _id: null, total: { $sum: '$payment_amount' } } }"
     })
-    Double sumPaymentAmountByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+    Optional<Double> sumPaymentAmountByDateRange(LocalDateTime startDate, LocalDateTime endDate);
 
+    boolean existsById(UUID id);
+
+    void deleteById(UUID id);
 }

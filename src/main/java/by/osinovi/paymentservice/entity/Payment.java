@@ -1,14 +1,16 @@
 package by.osinovi.paymentservice.entity;
 
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,13 +19,13 @@ import java.time.LocalDateTime;
 @Document(collection = "payments")
 public class Payment {
     @Id
-    private String id;
+    private UUID id;
 
     @Field("order_id")
-    private String orderId;
+    private Long orderId;
 
     @Field("user_id")
-    private String userId;
+    private Long userId;
 
     private String status;
 
