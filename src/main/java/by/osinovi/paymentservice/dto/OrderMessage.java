@@ -5,17 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class PaymentResponseDTO {
-    private String id;
+@AllArgsConstructor
+public class OrderMessage {
     private Long orderId;
     private Long userId;
-    private String status;
-    private LocalDateTime timestamp;
-    private Double paymentAmount;
+    private BigDecimal totalAmount;
 }

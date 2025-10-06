@@ -1,20 +1,9 @@
 package by.osinovi.paymentservice.service;
 
-import by.osinovi.paymentservice.dto.PaymentRequestDTO;
-import by.osinovi.paymentservice.dto.PaymentResponseDTO;
-
-import java.util.List;
+import by.osinovi.paymentservice.dto.OrderMessage;
+import by.osinovi.paymentservice.entity.Payment;
 
 public interface PaymentService {
-    PaymentResponseDTO createPayment(PaymentRequestDTO dto);
+    Payment createPayment(OrderMessage orderMessage);
 
-    List<PaymentResponseDTO> findPaymentsByOrderId(String orderId);
-
-    List<PaymentResponseDTO> findPaymentsByUserId(String userId);
-
-    List<PaymentResponseDTO> findPaymentsByStatus(List<String> statuses);
-
-    Double getTotalAmountByDateRange(String start, String end);
-
-    void deletePayment(String id);
 }

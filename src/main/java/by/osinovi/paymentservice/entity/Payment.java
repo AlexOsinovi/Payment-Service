@@ -1,14 +1,15 @@
 package by.osinovi.paymentservice.entity;
 
+import by.osinovi.paymentservice.util.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,10 +28,10 @@ public class Payment {
     @Field("user_id")
     private Long userId;
 
-    private String status;
+    private PaymentStatus status;
 
     private LocalDateTime timestamp;
 
     @Field("payment_amount")
-    private Double payment_amount;
+    private BigDecimal payment_amount;
 }

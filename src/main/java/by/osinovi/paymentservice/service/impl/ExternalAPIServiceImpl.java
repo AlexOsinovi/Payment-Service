@@ -1,22 +1,21 @@
 package by.osinovi.paymentservice.service.impl;
 
-import by.osinovi.paymentservice.entity.Payment;
-import by.osinovi.paymentservice.service.RandomService;
+import by.osinovi.paymentservice.service.ExternalAPIService;
+import by.osinovi.paymentservice.util.PaymentStatus;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Service
 @RequiredArgsConstructor
-public class RandomServiceImpl implements RandomService {
-    private static final Logger logger = LoggerFactory.getLogger(RandomServiceImpl.class);
+@Slf4j
+public class ExternalAPIServiceImpl implements ExternalAPIService {
 
     private final RestClient restClient;
 
-    public String getRandomStatus(Payment payment) {
+    public PaymentStatus getStatus() {
         try {
             String body = restClient.get()
                     .uri("/integers/?num=1&min=1&max=100&col=1&base=10&format=plain&rnd=new")
@@ -25,15 +24,14 @@ public class RandomServiceImpl implements RandomService {
 
             if (body != null && !body.isBlank()) {
                 int randomNumber = Integer.parseInt(body.trim());
-                logger.info("Received random number: {}", randomNumber);
-                payment.setStatus(randomNumber % 2 == 0 ? "SUCCESS" : "FAILED");
+                log.info("Received random number: {}", randomNumber);
+                return randomNumber % 2 == 0 ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
             } else {
                 throw new RuntimeException("Empty or invalid response from API");
             }
         } catch (RestClientException e) {
-            logger.error("Error calling random API: {}", e.getMessage(), e);
-            payment.setStatus("FAILED");
+            log.error("Error calling random API: {}", e.getMessage(), e);
+            return PaymentStatus.FAILED;
         }
-        return payment.getStatus();
     }
 }
