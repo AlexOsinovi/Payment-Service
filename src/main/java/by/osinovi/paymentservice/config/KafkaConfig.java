@@ -7,11 +7,9 @@ import org.springframework.kafka.transaction.KafkaTransactionManager;
 
 @Configuration
 public class KafkaConfig {
-
     @Bean
     public KafkaTransactionManager<String, Object> kafkaTransactionManager(
             ProducerFactory<String, Object> producerFactory) {
         return new KafkaTransactionManager<>(producerFactory);
     }
-
 }

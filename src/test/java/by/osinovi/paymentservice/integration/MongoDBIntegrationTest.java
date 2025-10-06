@@ -1,16 +1,13 @@
 package by.osinovi.paymentservice.integration;
 
 import by.osinovi.paymentservice.entity.Payment;
+import by.osinovi.paymentservice.integration.config.BaseIntegrationTest;
 import by.osinovi.paymentservice.repository.PaymentRepository;
 import by.osinovi.paymentservice.util.PaymentStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
@@ -26,20 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataMongoTest
 @Testcontainers
-class MongoDBIntegrationTest {
-
-    @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0")
-            .withReuse(true);
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-        registry.add("spring.data.mongodb.database", () -> "payment_service_test");
-        registry.add("spring.data.mongodb.host", () -> "localhost");
-        registry.add("spring.data.mongodb.username", () -> "testuser");
-        registry.add("spring.data.mongodb.password", () -> "testpass");
-    }
+class MongoDBIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private PaymentRepository paymentRepository;

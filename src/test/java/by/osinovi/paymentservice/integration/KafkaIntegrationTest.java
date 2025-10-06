@@ -2,6 +2,7 @@ package by.osinovi.paymentservice.integration;
 
 import by.osinovi.paymentservice.dto.OrderMessage;
 import by.osinovi.paymentservice.entity.Payment;
+import by.osinovi.paymentservice.integration.config.BaseIntegrationTest;
 import by.osinovi.paymentservice.repository.PaymentRepository;
 import by.osinovi.paymentservice.service.PaymentService;
 import by.osinovi.paymentservice.util.PaymentStatus;
@@ -21,7 +22,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Testcontainers
 @DirtiesContext
-public class KafkaIntegrationTest {
+public class KafkaIntegrationTest extends BaseIntegrationTest {
 
     private static WireMockServer wireMockServer;
 
@@ -67,13 +67,7 @@ public class KafkaIntegrationTest {
     private KafkaTemplate<String, OrderMessage> kafkaTemplate;
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7.0")
-            .withReuse(true)
-            .withStartupTimeout(java.time.Duration.ofMinutes(2));
-
-    @Container
     public static KafkaContainer kafkaContainer = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"))
-            .withReuse(true)
             .withStartupTimeout(java.time.Duration.ofMinutes(3));
 
     @DynamicPropertySource

@@ -21,5 +21,4 @@ public class PaymentProducer {
         paymentKafkaTemplate.send(paymentsTopic, String.valueOf(payment.getId()), payment);
         log.warn("Payment event sent successfully");
     }
-
 }
