@@ -1,0 +1,68 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: Payment-Service
+  data:
+    mongodb:
+      database: ${MONGO_INITDB_DATABASE}
+      host: ${MONGO_INITDB_HOST}
+      port: 27017
+      username: ${MONGO_INITDB_ROOT_USERNAME}
+      password: ${MONGO_INITDB_ROOT_PASSWORD}
+      authentication-database: admin
+  config:
+    import: optional:file:.env[.properties]
+  kafka:
+    bootstrap-servers: localhost:9092
+    topics:
+      orders: orders-topic
+      payments: payments-topic
+    consumer:
+      group-id: payment-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      isolation-level: read_committed
+      properties:
+        spring:
+          json:
+            use:
+              type:
+                headers: true
+            trusted:
+              packages: by.osinovi.*
+            type:
+              mapping: orderMsg:by.osinovi.paymentservice.dto.OrderMessage
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable:
+          idempotence: true
+        spring:
+          json:
+            add:
+              type:
+                headers: true
+            type:
+              mapping: by.osinovi.paymentservice.entity.Payment:paymentMsg
+        transactional:
+          id: payment-service-1
+
+random-api-url: ${RANDOM_API_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  level:
+    by:
+      osinovi: DEBUG
